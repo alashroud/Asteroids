@@ -70,7 +70,7 @@ export const createScore = async (req, res) => {
     const { player_name, score, words_typed, accuracy, game_duration, difficulty } = req.body;
 
     // Validate required fields
-    if (!player_name || score === undefined) {
+    if (!player_name || typeof player_name !== 'string' || player_name.trim() === '' || score === undefined) {
       return res.status(400).json({ error: 'player_name and score are required' });
     }
 
