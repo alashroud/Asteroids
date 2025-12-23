@@ -1,22 +1,26 @@
 import TypingEngine from './TypingEngine.js';
 import ScoreManager from './ScoreManager.js';
 import WordGenerator from './WordGenerator.js';
+import DifficultyManager from './DifficultyManager.js';
+import { submitScore } from '../ApiClient.js';
 
 export class GameEngine {
   constructor() {
     this.state = 'MENU'; // MENU, PLAYING, PAUSED, GAMEOVER
     this.lastSpawnTime = 0;
-    this.spawnInterval = 2000; // ms
-    this.difficultyLevel = 1;
     
     // Bind methods to keep 'this' context
     this.handleInput = this.handleInput.bind(this);
     this.gameLoop = this.gameLoop.bind(this);
 
-    // Setup Typing Engine Listeners
+    // Setup Typing Engine Listeners immediately
     this._setupTypingEvents();
   }
 
+  /**
+   * Called once when the scene loads.
+   * @param {HTMLElement} sceneEl 
+   */
   init(sceneEl) {
     this.scene = sceneEl;
     console.log('GameEngine initialized');
@@ -26,34 +30,60 @@ export class GameEngine {
   }
 
   startGame() {
+    if (this.state === 'PLAYING') return;
+
+    console.log('Starting Game...');
     this.state = 'PLAYING';
+    
+    // 1. Reset all Sub-Systems
     ScoreManager.reset();
+    DifficultyManager.reset();
     TypingEngine.resetState();
     
-    this.lastSpawnTime = performance.now();
-    this.difficultyLevel = 1;
-    this.spawnInterval = 2500;
+    // 2. Reset Earth Health (Visuals)
+    const earth = document.getElementById('earth');
+    if (earth) {
+      earth.setAttribute('earth-component', 'health', 100);
+    }
 
-    // Start the loop
+    // 3. Start Loop
+    this.lastSpawnTime = performance.now();
     requestAnimationFrame(this.gameLoop);
     
-    // Emit event for UI to hide menu
+    // 4. Notify UI
     this.scene.emit('game-start');
   }
 
-  stopGame() {
+  async stopGame() {
+    if (this.state === 'GAMEOVER') return;
+
     this.state = 'GAMEOVER';
     const stats = ScoreManager.getSessionStats();
     console.log('Game Over Stats:', stats);
     
-    // Emit event for UI to show Game Over screen
+    // 1. Emit event for UI (Show screen immediately)
     this.scene.emit('game-over', stats);
+
+    // 2. Save to Database (Background operation)
+    try {
+      // Matches your schema.sql columns (player_name, score, etc.)
+      await submitScore({
+        player_name: "Player1", // You'll need to get this from a UI input or config
+        score: stats.score,
+        words_typed: stats.wordsTyped,
+        accuracy: stats.accuracy,
+        game_duration: (Date.now() - ScoreManager.startTime) / 1000
+      });
+      console.log("Score saved!");
+    } catch (err) {
+      console.error("Failed to save score:", err);
+    }
   }
 
   handleInput(e) {
     if (this.state !== 'PLAYING') return;
     
-    // Prevent default browser actions for game keys if needed
+    // Pass single characters to the Typing Engine
     if (e.key.length === 1) {
       TypingEngine.processKey(e.key);
     }
@@ -62,48 +92,53 @@ export class GameEngine {
   gameLoop(time) {
     if (this.state !== 'PLAYING') return;
 
-    // 1. Spawn Logic
-    if (time - this.lastSpawnTime > this.spawnInterval) {
+    // 1. Calculate Dynamic Spawn Interval
+    const currentInterval = DifficultyManager.getSpawnInterval();
+
+    // 2. Spawn Logic
+    if (time - this.lastSpawnTime > currentInterval) {
       this.spawnEnemy();
       this.lastSpawnTime = time;
-      
-      // Progressive difficulty: Speed up spawns slightly
-      if (this.spawnInterval > 800) this.spawnInterval -= 20;
     }
 
-    // 2. Check Game Over (Health)
-    // This assumes your Earth component emits 'health-changed' or you check a property
-    const earth = document.getElementById('earth');
-    if (earth && earth.components['earth-component']) {
-      if (earth.components['earth-component'].data.health <= 0) {
-        this.stopGame();
-        return; 
-      }
-    }
+    // Note: We removed the Health Check here because AsteroidComponent 
+    // now calls GameEngine.stopGame() directly upon impact.
 
     requestAnimationFrame(this.gameLoop);
   }
 
   spawnEnemy() {
-    // 1. Get a word based on difficulty
-    const word = WordGenerator.getByLevel(this.difficultyLevel);
+    // 1. Get difficulty settings
+    const difficulty = DifficultyManager.getWordDifficulty(); // 'easy', 'moderate', 'hard'
+    const speed = DifficultyManager.getEnemySpeed();
     
-    // 2. Create A-Frame entity
+    // 2. Get a word
+    const word = WordGenerator.getWord(difficulty);
+    
+    // 3. Create A-Frame entity
     const enemyEl = document.createElement('a-entity');
     const id = `enemy-${Date.now()}`; // Unique ID
     
     enemyEl.setAttribute('id', id);
-    enemyEl.setAttribute('asteroid-component', `word: ${word}; speed: ${1 + (this.difficultyLevel * 0.1)}`);
     
-    // Random X/Y start position
+    // Attach our updated component
+    enemyEl.setAttribute('asteroid-component', {
+      word: word,
+      speed: speed,
+      damage: 10,
+      useModel: true // Set to false if you don't have the GLTF yet
+    });
+    
+    // 4. Randomize Start Position
+    // X: -5 to 5, Y: 1 to 6, Z: -20 (Start far away)
     const x = (Math.random() * 10) - 5;
-    const y = (Math.random() * 6) + 1;
-    enemyEl.setAttribute('position', `${x} ${y} -20`); // Start far back
+    const y = (Math.random() * 5) + 1;
+    enemyEl.setAttribute('position', `${x} ${y} -20`);
     
-    // 3. Add to Scene
+    // 5. Add to Scene
     this.scene.appendChild(enemyEl);
 
-    // 4. Register with TypingEngine
+    // 6. Register with TypingEngine
     TypingEngine.addTarget(id, word, enemyEl);
   }
 
@@ -112,44 +147,34 @@ export class GameEngine {
     TypingEngine.on('onLock', (targetId) => {
       const el = document.getElementById(targetId);
       if (el) {
-        // Example: Change color to indicate locked
-        el.setAttribute('material', 'color', '#ff0000'); 
-      }
-    });
-
-    // Visual feedback for progress (e.g., update text color)
-    TypingEngine.on('onProgress', (targetId, index, char) => {
-      const el = document.getElementById(targetId);
-      if (el) {
-        // You could emit an event to the component to update its text color
-        el.emit('typing-progress', { index });
+        // Optional: Visual highlight
+        // el.setAttribute('material', 'color', '#ff0000'); 
       }
     });
 
     // Handle Mistake
     TypingEngine.on('onMistake', () => {
       ScoreManager.handleMistake();
-      // Optional: Play sound or shake screen
       this.scene.emit('sound-mistake');
     });
 
-    // Handle Destruction
+    // Handle Destruction (Success)
     TypingEngine.on('onComplete', (targetId, word) => {
-      ScoreManager.handleWordComplete(word, 'easy'); // TODO: Pass actual difficulty
+      // 1. Update Score
+      const difficulty = DifficultyManager.getWordDifficulty();
+      ScoreManager.handleWordComplete(word, difficulty);
       
+      // 2. Update Difficulty Progress
+      DifficultyManager.onWordTyped();
+
+      // 3. Remove Entity
       const el = document.getElementById(targetId);
       if (el) {
-        // Create explosion effect before removing (optional)
-        // el.parentNode.removeChild(el); // Component handles removal usually, or do it here
+        // Optional: Spawn explosion particle effect here before removing
         el.remove(); 
       }
       
       this.scene.emit('sound-explosion');
-      
-      // Increase difficulty every 5 kills
-      if (ScoreManager.wordsTyped % 5 === 0) {
-        this.difficultyLevel++;
-      }
     });
   }
 }

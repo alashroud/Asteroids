@@ -107,3 +107,12 @@ export default {
   getScores,
   checkHealth,
 };
+
+export async function saveScore(scoreData) {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scoreData)
+  });
+  return response.json();
+}
