@@ -26,11 +26,11 @@ AFRAME.registerSystem('game-state', {
 
   /**
    * Set up event listeners for game state changes
-   * Listens for: game-started, game-over, game-paused, game-resumed
+   * Listens for: game-start, game-over, game-paused, game-resumed
    */
   setupGameListeners: function() {
     // Start game - enable input
-    this.el.addEventListener('game-started', () => {
+    this.el.addEventListener('game-start', () => {
       this.isGameActive = true;
       this.clearInput();
     });
@@ -58,7 +58,16 @@ AFRAME.registerSystem('game-state', {
    * Only processes input when game is active
    */
   setupKeyboardListeners: function() {
+    // If the TypingEngine path is active, avoid double-handling keyboard input
+    if (window.__USE_TYPING_ENGINE__ === true) {
+      console.info('GameStateSystem: TypingEngine active, keyboard listeners disabled');
+      return;
+    }
+
     document.addEventListener('keydown', (e) => {
+      // If TypingEngine was activated later, ignore this handler
+      if (window.__USE_TYPING_ENGINE__ === true) return;
+
       // Ignore if typing in input fields
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         return;

@@ -2,7 +2,7 @@ import TypingEngine from './TypingEngine.js';
 import ScoreManager from './ScoreManager.js';
 import WordGenerator from './WordGenerator.js';
 import DifficultyManager from './DifficultyManager.js';
-import { submitScore } from '../ApiClient.js';
+import { submitScore } from '../api/ApiClient.js';
 
 export class GameEngine {
   constructor() {
@@ -82,7 +82,19 @@ export class GameEngine {
 
   handleInput(e) {
     if (this.state !== 'PLAYING') return;
-    
+
+    // Ignore input if a text field is focused (to avoid double input when HUD input is used)
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+      return;
+    }
+
+    // Allow Escape to reset current typing target
+    if (e.key === 'Escape') {
+      TypingEngine.resetState();
+      return;
+    }
+
     // Pass single characters to the Typing Engine
     if (e.key.length === 1) {
       TypingEngine.processKey(e.key);

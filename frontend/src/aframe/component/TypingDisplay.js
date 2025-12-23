@@ -13,6 +13,8 @@
  * 
  * @component typing-display
  */
+import TypingEngine from '../../game/TypingEngine.js';
+
 AFRAME.registerComponent('typing-display', {
   schema: {},
 
@@ -48,7 +50,7 @@ AFRAME.registerComponent('typing-display', {
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
-      pointer-events: none;
+      pointer-events: auto;
       text-align: center;
       display: none;
     `;
@@ -72,9 +74,10 @@ AFRAME.registerComponent('typing-display', {
       background: rgba(0, 0, 0, 0.85);
       border: 2px solid #00FFFF;
       border-radius: 10px;
-      padding: 15px 40px;
-      min-width: 400px;
+      padding: 15px 36px;
+      min-width: 320px;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      position: relative;
     `;
     
     // Current input text display
@@ -88,10 +91,57 @@ AFRAME.registerComponent('typing-display', {
       letter-spacing: 4px;
       min-height: 40px;
       text-shadow: 0 0 10px currentColor;
+      pointer-events: none;
     `;
     inputText.textContent = '_';
     inputBg.appendChild(inputText);
     this.inputText = inputText;
+
+    // Create an invisible, focusable input to open virtual keyboards on mobile
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.id = 'typing-input';
+    hiddenInput.autocomplete = 'off';
+    hiddenInput.autocapitalize = 'off';
+    hiddenInput.autocorrect = 'off';
+    hiddenInput.spellcheck = false;
+    hiddenInput.style.cssText = `
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      border: none;
+      background: transparent;
+      caret-color: transparent;
+      pointer-events: auto;
+    `;
+
+    // When focused, stop propagation so global key handlers don't double-process
+    hiddenInput.addEventListener('keydown', (e) => {
+      // Allow backspace handling
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        TypingEngine.resetState();
+        return;
+      }
+
+      // Only allow single-character keys
+      if (e.key.length === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        TypingEngine.processKey(e.key);
+      }
+    });
+
+    // When touching/clicking the input area, ensure the element receives focus (mobile)
+    inputBg.addEventListener('click', () => {
+      hiddenInput.focus();
+    });
+
+    // Add input to background
+    inputBg.appendChild(hiddenInput);
+    this.hiddenInput = hiddenInput;
     
     hudContainer.appendChild(inputBg);
     
@@ -105,7 +155,7 @@ AFRAME.registerComponent('typing-display', {
       margin-top: 10px;
       letter-spacing: 1px;
     `;
-    instruction.textContent = 'Type to destroy asteroids!';
+    instruction.textContent = 'Tap the HUD and type to destroy asteroids!';
     hudContainer.appendChild(instruction);
     this.instruction = instruction;
     
@@ -114,12 +164,14 @@ AFRAME.registerComponent('typing-display', {
     this.hudContainer = hudContainer;
     
     // Listen for game state changes to show/hide HUD
-    this.el.sceneEl.addEventListener('game-started', () => {
+    this.el.sceneEl.addEventListener('game-start', () => {
       this.show();
+      try { this.hiddenInput.focus(); } catch (e) {}
     });
     
     this.el.sceneEl.addEventListener('game-over', () => {
       this.hide();
+      try { this.hiddenInput.blur(); } catch (e) {}
     });
     
     this.el.sceneEl.addEventListener('game-paused', () => {
@@ -128,6 +180,7 @@ AFRAME.registerComponent('typing-display', {
     
     this.el.sceneEl.addEventListener('game-resumed', () => {
       this.show();
+      try { this.hiddenInput.focus(); } catch (e) {}
     });
   },
 
@@ -137,7 +190,50 @@ AFRAME.registerComponent('typing-display', {
    * This component only displays the results
    */
   setupKeyboardListeners: function() {
-    // Keyboard events are handled by GameStateSystem
+    // Connect TypingEngine events to update the HUD
+    TypingEngine.on('onLock', (targetId) => {
+      const t = TypingEngine.targets.get(targetId);
+      const word = t ? t.originalWord : '';
+      this.setTargetWord(word);
+      this.currentInput = t ? t.word.substring(0, 1) : '';
+      this.updateDisplay();
+
+      // Focus input so the user can continue typing (mobile-friendly)
+      try { this.hiddenInput && this.hiddenInput.focus(); } catch (e) {}
+    });
+
+    TypingEngine.on('onProgress', (targetId, index, char) => {
+      const t = TypingEngine.targets.get(targetId);
+      if (t) {
+        this.targetWord = t.originalWord;
+        // index is 1-based progress (number of chars matched)
+        this.currentInput = t.word.substring(0, index);
+      }
+      this.updateDisplay();
+    });
+
+    TypingEngine.on('onMistake', (char) => {
+      // Quick red flash
+      if (this.inputText) {
+        const old = this.inputText.style.color;
+        this.inputText.style.color = '#FF0000';
+        setTimeout(() => { this.updateDisplay(); }, 220);
+      }
+    });
+
+    TypingEngine.on('onComplete', (targetId, word) => {
+      // Success flash
+      if (this.inputText) {
+        this.inputText.style.color = '#FFFFFF';
+        setTimeout(() => { this.clearInput(); }, 220);
+      } else {
+        this.clearInput();
+      }
+    });
+
+    TypingEngine.on('onReset', () => {
+      this.clearInput();
+    });
   },
 
   /**
@@ -169,9 +265,12 @@ AFRAME.registerComponent('typing-display', {
    */
   updateDisplay: function() {
     if (this.inputText) {
-      const display = this.currentInput || '_';
+      // Blinking caret
+      const caret = (Date.now() % 800) < 400 ? '_' : '';
+      const base = this.currentInput || '';
+      const display = base ? (base + caret) : '_';
       this.inputText.textContent = display;
-      
+
       // Color feedback based on correctness
       if (this.targetWord && this.currentInput) {
         const isCorrect = this.targetWord.toLowerCase().startsWith(this.currentInput);
