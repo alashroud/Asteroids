@@ -8,6 +8,7 @@ export class GameEngine {
   constructor() {
     this.state = 'MENU'; // MENU, PLAYING, PAUSED, GAMEOVER
     this.lastSpawnTime = 0;
+    this.playerName = 'Guest'; // Default name
     
     // Bind methods to keep 'this' context
     this.handleInput = this.handleInput.bind(this);
@@ -29,10 +30,15 @@ export class GameEngine {
     window.addEventListener('keydown', this.handleInput);
   }
 
-  startGame() {
+  /**
+   * Starts the game session.
+   * @param {string} playerName - Name entered by the user
+   */
+  startGame(playerName) {
     if (this.state === 'PLAYING') return;
 
-    console.log('Starting Game...');
+    console.log(`Starting Game for pilot: ${playerName}`);
+    this.playerName = playerName || 'Guest';
     this.state = 'PLAYING';
     
     // 1. Reset all Sub-Systems
@@ -54,6 +60,9 @@ export class GameEngine {
     this.scene.emit('game-start');
   }
 
+  /**
+   * Stops the game, shows Game Over screen, and saves score.
+   */
   async stopGame() {
     if (this.state === 'GAMEOVER') return;
 
@@ -66,36 +75,25 @@ export class GameEngine {
 
     // 2. Save to Database (Background operation)
     try {
-      // Matches your schema.sql columns (player_name, score, etc.)
       await submitScore({
-        player_name: "Player1", // You'll need to get this from a UI input or config
+        player_name: this.playerName,
         score: stats.score,
         words_typed: stats.wordsTyped,
         accuracy: stats.accuracy,
-        game_duration: (Date.now() - ScoreManager.startTime) / 1000
+        game_duration: stats.durationSeconds, // Ensure this matches your API expectation
+        difficulty: DifficultyManager.getWordDifficulty() // Optional: track final difficulty
       });
-      console.log("Score saved!");
+      console.log("Score submitted successfully!");
     } catch (err) {
-      console.error("Failed to save score:", err);
+      console.error("Failed to submit score:", err);
     }
   }
 
   handleInput(e) {
     if (this.state !== 'PLAYING') return;
-
-    // Ignore input if a text field is focused (to avoid double input when HUD input is used)
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
-      return;
-    }
-
-    // Allow Escape to reset current typing target
-    if (e.key === 'Escape') {
-      TypingEngine.resetState();
-      return;
-    }
-
+    
     // Pass single characters to the Typing Engine
+    // Ignore special keys like 'Shift', 'Backspace' (unless you want to handle them)
     if (e.key.length === 1) {
       TypingEngine.processKey(e.key);
     }
@@ -113,9 +111,6 @@ export class GameEngine {
       this.lastSpawnTime = time;
     }
 
-    // Note: We removed the Health Check here because AsteroidComponent 
-    // now calls GameEngine.stopGame() directly upon impact.
-
     requestAnimationFrame(this.gameLoop);
   }
 
@@ -127,6 +122,11 @@ export class GameEngine {
     // 2. Get a word
     const word = WordGenerator.getWord(difficulty);
     
+    if (!word) {
+      console.warn("WordGenerator returned no word!");
+      return;
+    }
+    
     // 3. Create A-Frame entity
     const enemyEl = document.createElement('a-entity');
     const id = `enemy-${Date.now()}`; // Unique ID
@@ -134,15 +134,18 @@ export class GameEngine {
     enemyEl.setAttribute('id', id);
     
     // Attach our updated component
+    // Note: We pass 'useModel: true' to use the GLTF, or false for the geometric shape
     enemyEl.setAttribute('asteroid-component', {
       word: word,
       speed: speed,
       damage: 10,
-      useModel: true // Set to false if you don't have the GLTF yet
+      useModel: true 
     });
     
     // 4. Randomize Start Position
-    // X: -5 to 5, Y: 1 to 6, Z: -20 (Start far away)
+    // X: -5 to 5 (Spread horizontally)
+    // Y: 1 to 6 (Spread vertically)
+    // Z: -20 (Start far away)
     const x = (Math.random() * 10) - 5;
     const y = (Math.random() * 5) + 1;
     enemyEl.setAttribute('position', `${x} ${y} -20`);
@@ -150,7 +153,7 @@ export class GameEngine {
     // 5. Add to Scene
     this.scene.appendChild(enemyEl);
 
-    // 6. Register with TypingEngine
+    // 6. Register with TypingEngine so we can type it
     TypingEngine.addTarget(id, word, enemyEl);
   }
 
@@ -159,8 +162,8 @@ export class GameEngine {
     TypingEngine.on('onLock', (targetId) => {
       const el = document.getElementById(targetId);
       if (el) {
-        // Optional: Visual highlight
-        // el.setAttribute('material', 'color', '#ff0000'); 
+        // Optional: Visual highlight (e.g., turn text red)
+        // el.querySelector('a-text').setAttribute('color', '#ff0000');
       }
     });
 

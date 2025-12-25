@@ -1,48 +1,52 @@
 /* global AFRAME */
 import TypingEngine from '../../game/TypingEngine.js';
+import GameEngine from '../../game/GameEngine.js';
 
-/**
- * Asteroid Component - Destructible space rocks with word labels
- * 
- * Manages:
- * - Movement toward Earth
- * - Word display (Text)
- * - Rotation (Visuals)
- * - Collision detection with Earth
- */
 AFRAME.registerComponent('asteroid-component', {
   schema: {
-    word: { type: 'string', default: '' },
+    word: { type: 'string', default: 'ERROR' },
     speed: { type: 'number', default: 2.0 },
     damage: { type: 'number', default: 10 },
     rotationSpeed: { type: 'vec3', default: { x: 1, y: 1, z: 1 } },
-    useModel: { type: 'boolean', default: false } // Set true if you have the GLTF loaded
+    useModel: { type: 'boolean', default: false }
   },
 
   init: function() {
-    // 1. Setup Visuals (Model or Sphere)
+    // --- 1. Create a Child Entity for the Visual Model ---
+    // We do this so we can spin the rock independently of the text
+    this.modelEl = document.createElement('a-entity');
+    
     if (this.data.useModel) {
-      this.el.setAttribute('gltf-model', '#asteroid-model');
-      this.el.setAttribute('scale', '0.5 0.5 0.5');
+      this.modelEl.setAttribute('gltf-model', '#asteroid-model');
+      this.modelEl.setAttribute('scale', '0.5 0.5 0.5');
     } else {
-      // Fallback geometry for testing
-      this.el.setAttribute('geometry', 'primitive: dodecahedron; radius: 0.5');
-      this.el.setAttribute('material', 'color: #888; roughness: 1.0; flatShading: true');
+      // Fallback geometry
+      this.modelEl.setAttribute('geometry', 'primitive: dodecahedron; radius: 0.5');
+      this.modelEl.setAttribute('material', 'color: #888; roughness: 1.0; flatShading: true');
     }
+    
+    this.el.appendChild(this.modelEl);
 
-    // 2. Setup Text Label
+    // --- 2. Create the Text Label ---
     this.textEl = document.createElement('a-text');
     this.textEl.setAttribute('value', this.data.word);
     this.textEl.setAttribute('align', 'center');
-    this.textEl.setAttribute('position', '0 0.8 0'); // Float above asteroid
-    this.textEl.setAttribute('scale', '1.5 1.5 1.5');
+    
+    // Position text ABOVE the asteroid so it's not inside
+    this.textEl.setAttribute('position', '0 1.2 0'); 
+    
+    // Make it large enough to read
+    this.textEl.setAttribute('width', '10'); 
+    
+    // Ensure it renders on both sides just in case
     this.textEl.setAttribute('side', 'double');
-    this.textEl.setAttribute('color', '#ffffff');
-    // Ensure text always faces camera
+    
+    // Make text always face the camera
     this.textEl.setAttribute('look-at', '[camera]'); 
+    
     this.el.appendChild(this.textEl);
 
-    // 3. Randomize Rotation Direction
+    // --- 3. Setup Rotation Variables ---
     this.rotationAxis = {
       x: Math.random() * this.data.rotationSpeed.x,
       y: Math.random() * this.data.rotationSpeed.y,
@@ -53,18 +57,19 @@ AFRAME.registerComponent('asteroid-component', {
   tick: function(time, delta) {
     if (!delta) return;
 
-    // 1. Move towards camera (Positive Z)
-    // Note: In your scene, Earth is at Z = -3, Camera at Z = 0.
-    // If asteroids spawn at Z = -20, they need to move POSITIVE Z to hit Earth.
+    // 1. Move the ENTIRE container (Text + Model) towards Earth
+    // Assuming Earth is at Z = -3 and asteroids spawn at Z = -20
     const moveAmount = (this.data.speed * delta) / 1000;
     this.el.object3D.position.z += moveAmount;
 
-    // 2. Rotate the mesh (Visual only)
-    this.el.object3D.rotation.x += this.rotationAxis.x * (delta / 1000);
-    this.el.object3D.rotation.y += this.rotationAxis.y * (delta / 1000);
-    this.el.object3D.rotation.z += this.rotationAxis.z * (delta / 1000);
+    // 2. Rotate ONLY the model child (Text stays steady)
+    if (this.modelEl) {
+      this.modelEl.object3D.rotation.x += this.rotationAxis.x * (delta / 1000);
+      this.modelEl.object3D.rotation.y += this.rotationAxis.y * (delta / 1000);
+      this.modelEl.object3D.rotation.z += this.rotationAxis.z * (delta / 1000);
+    }
 
-    // 3. Collision Detection
+    // 3. Collision Check
     // Earth is at Z = -3. If we pass -3.5, we hit it.
     if (this.el.object3D.position.z > -3.5) {
       this.hitEarth();
@@ -80,33 +85,22 @@ AFRAME.registerComponent('asteroid-component', {
       const newHealth = currentHealth - this.data.damage;
       
       earth.setAttribute('earth-component', 'health', newHealth);
-      
-      // Visual/Audio Feedback
       earth.emit('damage-taken'); 
       console.log(`Impact! Earth Health: ${newHealth}`);
+
+      // Check Game Over
+      if (newHealth <= 0) {
+        GameEngine.stopGame();
+      }
     }
 
-    // Cleanup
     this.removeSelf();
   },
 
   removeSelf: function() {
-    // 1. Tell TypingEngine this word is gone (so user can't type it anymore)
     TypingEngine.removeTarget(this.el.id);
-
-    // 2. Remove from DOM
     if (this.el.parentNode) {
       this.el.parentNode.removeChild(this.el);
-    }
-  },
-
-  // Optional: Listen for typing progress to highlight text
-  events: {
-    'typing-progress': function(evt) {
-      // Example: Turn text green as you type
-      // This requires more complex text manipulation (coloring substrings)
-      // For now, we just flash it
-      this.textEl.setAttribute('color', '#00ff00');
     }
   }
 });
