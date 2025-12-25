@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/gh/akbartus/A-Frame-Component-Postprocessing/dist/post-processing.min.js"></script>
   
   <!-- CSS -->
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   
@@ -110,8 +110,12 @@
     
     <!-- Starfield Background -->
     <a-entity id="starfield"></a-entity>
+    <!-- Confetti spawner for celebrations (listens to game-over) -->
+    <a-entity id="confetti" confetti></a-entity>
     
   </a-scene>
+ 
+
   
   <!-- UI Overlay -->
   <div id="ui-overlay">
@@ -200,19 +204,21 @@
   </div>
   
   <!-- Load A-Frame Components -->
-  <script type="module" src="./src/aframe/component/AsteroidComponent.js"></script>
-  <script type="module" src="./src/aframe/component/EarthComponent.js"></script>
-  <script type="module" src="./src/aframe/component/ShipComponent.js"></script>
-  <script type="module" src="./src/aframe/component/TypingDisplay.js"></script>
-  <script type="module" src="./src/aframe/component/ProjectileSystem.js"></script>
+  <script type="module" src="/src/aframe/component/AsteroidComponent.js"></script>
+  <script type="module" src="/src/aframe/component/EarthComponent.js"></script>
+  <script type="module" src="/src/aframe/component/ShipComponent.js"></script>
+  <script type="module" src="/src/aframe/component/TypingDisplay.js"></script>
+  <script type="module" src="/src/aframe/component/StarfieldComponent.js"></script>
+  <script type="module" src="/src/aframe/component/ConfettiComponent.js"></script>
+  <script type="module" src="/src/aframe/component/ProjectileSystem.js"></script> 
 
   
   <!-- Load A-Frame Systems -->
-  <script type="module" src="./src/aframe/systems/CollisionSystem.js"></script>
-  <script type="module" src="./src/aframe/systems/GameStateSystem.js"></script>
+  <script type="module" src="/src/aframe/systems/CollisionSystem.js"></script>
+  <script type="module" src="/src/aframe/systems/GameStateSystem.js"></script>
   
   <!-- Main Entry Point -->
-  <script type="module" src="main.js"></script>
+  <script type="module" src="/main.js"></script>
   
 </body>
 </html>
