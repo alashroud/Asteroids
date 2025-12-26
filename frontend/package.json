@@ -1,0 +1,22 @@
+{
+    "name": "type-defender-frontend",
+    "private": true,
+    "version": "0.1.0",
+    "author": "Monday group, Team-2",
+    "description": "A 3d typing space game to improve your typing skills built with A-Frame and three js.",
+    "type": "module",
+    "scripts": {
+      "dev": "vite --open",
+      "build": "vite build",
+      "preview": "vite preview --open"
+    },
+    "devDependencies": {
+      "vite": "^5.0.0"
+    },
+    "dependencies": {
+      "aframe": "^1.4.2"
+    },
+    "engines": {
+      "node": ">=18.0.0"
+    }
+  }
