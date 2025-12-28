@@ -25,7 +25,7 @@ AFRAME.registerSystem('collision', {
     this.earth = null;             // Reference to earth entity
     this.shield = null;            // Reference to shield entity
     this.shieldDestroyed = false;  // Flag to track if shield is destroyed
-    this.checkInterval = 100;      // Check collisions every 100ms (performance optimization)
+    this.checkInterval = 16;       // Check collisions every 16ms (~60fps) to prevent fast asteroids from passing through
     this.lastCheck = 0;            // Timestamp of last collision check
     
     this.setupListeners();
@@ -66,13 +66,13 @@ AFRAME.registerSystem('collision', {
 
   /**
    * Main collision detection loop (called every frame)
-   * Throttled to check every 100ms for performance
+   * Throttled to check every 16ms (~60fps) to prevent fast asteroids from passing through
    * 
    * @param {number} time - Total elapsed time in milliseconds
    * @param {number} deltaTime - Time since last frame in milliseconds
    */
   tick: function(time, deltaTime) {
-    // Throttle collision checks to every 100ms
+    // Throttle collision checks to every 16ms to catch fast-moving asteroids
     if (time - this.lastCheck < this.checkInterval) return;
     this.lastCheck = time;
 

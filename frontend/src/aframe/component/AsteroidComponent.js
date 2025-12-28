@@ -79,7 +79,68 @@ AFRAME.registerComponent('asteroid-component', {
     if (!delta) return;
 
     const moveAmount = (this.data.speed * delta) / 1000;
+    
+    // Check collision BEFORE moving to prevent fast asteroids from passing through
+    const pos = this.el.object3D.position.clone();
+    const distanceToCenter = pos.length();
+    
+    const shieldEl = document.getElementById('shield');
+    const earthEl = document.getElementById('earth');
+    
+    // Respect global shield destruction from collision system and shield component state
+    const collisionSystem = this.el.sceneEl && this.el.sceneEl.systems && this.el.sceneEl.systems.collision;
+    const shieldIsGone = !shieldEl || !shieldEl.components.shield || shieldEl.components.shield.destroyed || (collisionSystem && collisionSystem.shieldDestroyed);
+    
+    // Check shield collision first (before moving)
+    if (!shieldIsGone && shieldEl && shieldEl.components.shield) {
+      const shieldRadius = shieldEl.components.shield.data.radius;
+      // Add safety margin (moveAmount) to catch fast-moving asteroids
+      if (distanceToCenter <= shieldRadius + this.data.size + moveAmount) {
+        shieldEl.components.shield.takeDamage(this.data.damage);
+        this.destroy(false);
+        return;
+      }
+    }
+    
+    // Check earth collision (before moving)
+    if (earthEl && earthEl.components.earth) {
+      const earthRadius = earthEl.components.earth.data.radius;
+      // Add safety margin (moveAmount) to catch fast-moving asteroids
+      if (distanceToCenter <= earthRadius + this.data.size + moveAmount) {
+        earthEl.components.earth.takeDamage(this.data.damage);
+        this.destroy(false);
+        return;
+      }
+    }
+    
+    // Only move if no collision detected
     this.el.object3D.position.z += moveAmount;
+
+    // Cleanup: Remove asteroid if it has passed Earth (to prevent memory leaks)
+    // Earth is at origin (0,0,0), so if asteroid is past Earth and far enough away, remove it
+    const newPos = this.el.object3D.position;
+    const newDistanceToCenter = newPos.length();
+    
+    // If asteroid has passed Earth (z > 0) and is beyond Earth's radius + safety margin, damage Earth and remove it
+    if (newPos.z > 10 && newDistanceToCenter > 15) {
+      // Asteroid has passed Earth without being destroyed - apply damage to Earth
+      // Check if shield is still active (if shield exists and isn't destroyed, it should have been hit already)
+      const shieldEl = document.getElementById('shield');
+      const shieldIsGone = !shieldEl || !shieldEl.components.shield || shieldEl.components.shield.destroyed || 
+                          (collisionSystem && collisionSystem.shieldDestroyed);
+      
+      // Only damage Earth if shield is gone (shield should have absorbed the hit if it was active)
+      // If shield was active, this asteroid somehow bypassed it, so still damage Earth
+      const earthEl = document.getElementById('earth');
+      if (earthEl && earthEl.components.earth) {
+        // Apply damage to Earth (same damage as if it had collided)
+        earthEl.components.earth.takeDamage(this.data.damage);
+        console.log(`Asteroid passed Earth! Earth took ${this.data.damage} damage.`);
+      }
+      // Remove asteroid after applying damage
+      this.removeSelf();
+      return;
+    }
 
     if (this.modelEl) {
       this.modelEl.object3D.rotation.x += this.rotationAxis.x * (delta / 1000);
@@ -128,34 +189,6 @@ AFRAME.registerComponent('asteroid-component', {
         }
       }
     }
-
-    const pos = this.el.object3D.position.clone();
-    const distanceToCenter = pos.length();
-
-    const shieldEl = document.getElementById('shield');
-    const earthEl = document.getElementById('earth');
-
-    // Respect global shield destruction from collision system and shield component state
-    const collisionSystem = this.el.sceneEl && this.el.sceneEl.systems && this.el.sceneEl.systems.collision;
-    const shieldIsGone = !shieldEl || !shieldEl.components.shield || shieldEl.components.shield.destroyed || (collisionSystem && collisionSystem.shieldDestroyed);
-
-    if (!shieldIsGone && shieldEl && shieldEl.components.shield) {
-      const shieldRadius = shieldEl.components.shield.data.radius;
-      if (distanceToCenter <= shieldRadius + this.data.size) {
-        shieldEl.components.shield.takeDamage(this.data.damage);
-        this.destroy(false);
-        return;
-      }
-    }
-
-    if (earthEl && earthEl.components.earth) {
-      const earthRadius = earthEl.components.earth.data.radius;
-      if (distanceToCenter <= earthRadius + this.data.size) {
-        earthEl.components.earth.takeDamage(this.data.damage);
-        this.destroy(false);
-        return;
-      }
-    }
   },
 
   destroy: function(typed) {
@@ -168,8 +201,7 @@ AFRAME.registerComponent('asteroid-component', {
       const explosion = document.createElement('a-entity');
       const worldPos = new THREE.Vector3();
       this.el.object3D.getWorldPosition(worldPos);
-      explosion.setAttribute('gltf-model', 'assets/meteor_explosion/scene.gltf');
-      explosion.setAttribute('position', `${worldPos.x} ${worldPos.y} ${worldPos.z}`);
+      explosion.setAttribute('gltf-model', '/assets/meteor_explosion/scene.gltf');      explosion.setAttribute('position', `${worldPos.x} ${worldPos.y} ${worldPos.z}`);
       
       // Scale explosion appropriately (was 0.35, made slightly larger for visibility)
       explosion.setAttribute('scale', '0.2 0.2 0.2');
@@ -188,7 +220,25 @@ AFRAME.registerComponent('asteroid-component', {
       const cleanup = () => {
         if (explosion && explosion.parentNode) {
           explosion.parentNode.removeChild(explosion);
-          // Optional: Explicitly dispose if using three.js internals, but A-Frame handles most DOM removal cleanup.
+          // Dispose Three.js resources if available
+          const obj3D = explosion.getObject3D('mesh');
+          if (obj3D) {
+            // Dispose geometries and materials to free memory
+            obj3D.traverse((child) => {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) {
+                  child.material.forEach(mat => {
+                    if (mat.map) mat.map.dispose();
+                    mat.dispose();
+                  });
+                } else {
+                  if (child.material.map) child.material.map.dispose();
+                  child.material.dispose();
+                }
+              }
+            });
+          }
         }
       };
       
@@ -196,9 +246,12 @@ AFRAME.registerComponent('asteroid-component', {
       explosion.addEventListener('animation-finished', cleanup);
       
       // Fallback cleanup in case animation event misses or is too long
-      // Reduced from 2500ms to 1000ms for quicker memory release as requested ("unlaod to release some memory")
+      // Reduced from 2500ms to 1000ms for quicker memory release as requested ("unload to release some memory")
       setTimeout(cleanup, 200);
     }
+
+    // Clean up asteroid's Three.js resources before removal
+    this._disposeResources();
 
     // Ensure TypingEngine forgets this target
     TypingEngine.removeTarget(this.el.id);
@@ -211,9 +264,65 @@ AFRAME.registerComponent('asteroid-component', {
   },
 
   removeSelf: function() {
+    // Clean up resources before removal
+    this._disposeResources();
+    
+    // Ensure TypingEngine forgets this target
     TypingEngine.removeTarget(this.el.id);
+    
+    // Notify scene that asteroid was removed (for collision system cleanup)
+    this.el.sceneEl && this.el.sceneEl.emit('asteroid-destroyed', { asteroid: this.el, typed: false });
+    
+    // Remove from DOM
     if (this.el.parentNode) {
       this.el.parentNode.removeChild(this.el);
+    }
+  },
+
+  /**
+   * Dispose Three.js resources to free memory
+   * Called when asteroid is destroyed or removed
+   */
+  _disposeResources: function() {
+    if (this.destroyed) return; // Prevent double disposal
+    
+    // Dispose model resources
+    if (this.modelEl) {
+      const obj3D = this.modelEl.getObject3D('mesh');
+      if (obj3D) {
+        obj3D.traverse((child) => {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                if (mat.map) mat.map.dispose();
+                if (mat.normalMap) mat.normalMap.dispose();
+                if (mat.emissiveMap) mat.emissiveMap.dispose();
+                mat.dispose();
+              });
+            } else {
+              if (child.material.map) child.material.map.dispose();
+              if (child.material.normalMap) child.material.normalMap.dispose();
+              if (child.material.emissiveMap) child.material.emissiveMap.dispose();
+              child.material.dispose();
+            }
+          }
+        });
+      }
+    }
+    
+    // Dispose text resources
+    if (this.textEl) {
+      const textObj3D = this.textEl.getObject3D('mesh');
+      if (textObj3D) {
+        if (textObj3D.geometry) textObj3D.geometry.dispose();
+        if (textObj3D.material) {
+          if (textObj3D.material.map) textObj3D.material.map.dispose();
+          textObj3D.material.dispose();
+        }
+      }
     }
   },
 

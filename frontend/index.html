@@ -34,9 +34,9 @@
     <!-- Assets -->
     <a-assets>
       <!-- Preload 3D Models -->
-      <a-asset-item id="asteroid-model" src="./assets/meteor_explosion/scene.gltf"></a-asset-item>
-      <a-asset-item id="earth-model" src="./assets/earth/scene.gltf"></a-asset-item>
-      <a-asset-item id="ship-model" src="./assets/spaceship/scene.gltf"></a-asset-item>
+      <a-asset-item id="asteroid-model" src="/assets/meteor_explosion/scene.gltf"></a-asset-item>
+<a-asset-item id="earth-model" src="/assets/earth/scene.gltf"></a-asset-item>
+<a-asset-item id="ship-model" src="/assets/spaceship/scene.gltf"></a-asset-item>
     </a-assets>
 
     <!-- Spaceship -->
@@ -147,6 +147,16 @@
         <button id="start-btn" class="btn-primary">START GAME</button>
         <button id="leaderboard-btn" class="btn-secondary">LEADERBOARD</button>
       </div>
+      <div class="audio-toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="music-toggle" checked>
+          <span>Music</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="sfx-toggle" checked>
+          <span>SFX</span>
+        </label>
+      </div>
       <div class="instructions">
         <h3>HOW TO PLAY</h3>
         <p>Type the words on asteroids to destroy them!</p>
@@ -199,6 +209,16 @@
         <button id="continue-btn" class="btn-primary">CONTINUE</button>
         <button id="pause-restart-btn" class="btn-secondary">RESTART</button>
         <button id="pause-quit-btn" class="btn-secondary">QUIT TO MENU</button>
+      </div>
+      <div class="audio-toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="pause-music-toggle" checked>
+          <span>Music</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="pause-sfx-toggle" checked>
+          <span>SFX</span>
+        </label>
       </div>
       <p class="muted">Press ESC to toggle pause</p>
     </div>

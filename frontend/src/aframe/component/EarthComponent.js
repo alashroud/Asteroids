@@ -69,7 +69,7 @@ AFRAME.registerComponent('earth', {
    */
   loadModel: function() {
     const modelEl = document.createElement('a-entity');
-    modelEl.setAttribute('gltf-model', './assets/earth/scene.gltf');
+    modelEl.setAttribute('gltf-model', '/assets/earth/scene.gltf');
     modelEl.setAttribute('scale', `${this.data.radius} ${this.data.radius} ${this.data.radius}`);
     modelEl.setAttribute('rotation', '0 0 0');
     

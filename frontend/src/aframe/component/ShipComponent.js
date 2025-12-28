@@ -33,7 +33,7 @@ AFRAME.registerComponent('spaceship', {
 
   loadModel: function() {
     const modelEl = document.createElement('a-entity');
-    modelEl.setAttribute('gltf-model', './assets/spaceship/scene.gltf');
+    modelEl.setAttribute('gltf-model', '/assets/spaceship/scene.gltf');
     modelEl.setAttribute('scale', '0.05 0.05 0.05');
     // Removed hardcoded rotation to allow parent control
     

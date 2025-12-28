@@ -126,12 +126,21 @@ export const getLeaderboard = async (req, res) => {
 
     if (error) {
       console.error('Error fetching leaderboard:', error);
-      return res.status(500).json({ error: 'Failed to fetch leaderboard' });
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      // Return more detailed error for debugging
+      return res.status(500).json({ 
+        error: 'Failed to fetch leaderboard',
+        details: error.message || error,
+        code: error.code
+      });
     }
 
-    res.json({ data });
+    res.json({ data: data || [] });
   } catch (err) {
     console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: err.message 
+    });
   }
 };

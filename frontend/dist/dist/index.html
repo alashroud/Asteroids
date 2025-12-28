@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asteroids Typing Game</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  
+  <!-- A-Frame Extras (for animation-mixer) -->
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/gh/akbartus/A-Frame-Component-Postprocessing/dist/post-processing.min.js"></script>
+  
+  <!-- CSS -->
+  <script type="module" crossorigin src="/assets/index-Dn28lrHf.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BQU2Cli2.css">
+</head>
+<body>
+  
+  <!-- A-Frame Scene -->
+  <a-scene post-processing="effect: bloom; bloomParams: threshold: 0.5, strength: 0.5, radius: 0.4, exposure: 1"
+    background="color: #000000"
+    fog="type: exponential; color: #000; density: 0.01"
+    collision
+    game-state
+    keyboard-shortcuts="enterVR: false">
+
+    
+    
+    <!-- Assets -->
+    <a-assets>
+      <!-- Preload 3D Models -->
+      <a-asset-item id="asteroid-model" src="./assets/meteor_explosion/scene.gltf"></a-asset-item>
+      <a-asset-item id="earth-model" src="./assets/earth/scene.gltf"></a-asset-item>
+      <a-asset-item id="ship-model" src="./assets/spaceship/scene.gltf"></a-asset-item>
+    </a-assets>
+
+    <!-- Spaceship -->
+    <a-entity id="spaceship" spaceship projectile-system position="23 8.3 20" rotation="3 190 -7"></a-entity>
+
+    <!-- Camera (fixed cinematic angle) -->
+    <!-- Position: right side, behind incoming asteroids, looking at Earth -->
+    <a-camera 
+      id="main-camera" 
+      position="20 10 25"
+      rotation="30 150 20"
+      fov="60" 
+      near="0.1" 
+      far="1000"
+      look-controls="enabled: true"
+      wasd-controls="enabled: false">
+    </a-camera>
+
+    <!-- Lighting -->
+    <a-entity 
+      light="type: ambient; color: #444; intensity: 1">
+    </a-entity>
+    
+    <a-entity 
+      light="type: directional; color: #FFF; intensity: 1"
+      position="5 10 7">
+    </a-entity>
+    
+    <a-entity 
+      light="type: point; color: #FFFFFF; intensity: 0.8; distance: 50; decay: 2"
+      position="-10 8 15">
+    </a-entity>
+
+    <a-entity 
+      light="type: point; color: #8899FF; intensity: 0.5; distance: 40; decay: 2"
+      position="10 5 12">
+    </a-entity>
+
+      <!-- Rim Light - Backlight for depth -->
+      <a-entity 
+        light="type: point; color: #FFE4B5; intensity: 0.6; distance: 35; decay: 2"
+        position="0 3 -10">
+      </a-entity>
+      
+      <!-- Earth Glow - Light near Earth -->
+      <a-entity 
+        light="type: point; color: #00AAFF; intensity: 0.7; distance: 20; decay: 2"
+        position="0 0 0">
+      </a-entity>
+    
+    <!-- Earth (BIGGER) -->
+    <a-entity 
+      id="earth" 
+      earth="radius: 5; health: 100"
+      position="0 0 0">
+    </a-entity>
+
+    <!-- Shield around Earth (BIGGER) -->
+    <a-entity 
+      id="shield" 
+      shield="radius: 7; strength: 50; maxStrength: 50"
+      position="0 0 0">
+    </a-entity>
+
+    <!-- Typing Display HUD -->
+    <a-entity 
+      id="typing-display"
+      typing-display
+      position="0 0 0">
+    </a-entity>
+    
+    <!-- Starfield Background -->
+    <a-entity id="starfield"></a-entity>
+    <!-- Confetti spawner for celebrations (listens to game-over) -->
+    <a-entity id="confetti" confetti></a-entity>
+    
+  </a-scene>
+ 
+
+  
+  <!-- UI Overlay -->
+  <div id="ui-overlay">
+    
+    <!-- Score Panel (visible during gameplay) -->
+    <div id="score-panel" class="hidden">
+      <div class="score-item">
+        <span class="label">SCORE:</span>
+        <span id="score-value" class="value">0</span>
+      </div>
+      <div class="score-item">
+        <span class="label">WAVE:</span>
+        <span id="wave-value" class="value">1</span>
+      </div>
+      <div class="score-item">
+        <span class="label">COMBO:</span>
+        <span id="combo-value" class="value">x1</span>
+      </div>
+    </div>
+    
+    <!-- Game State Messages -->
+    <div id="game-message" class="hidden"></div>
+    
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="screen">
+      <h1>ASTEROIDS</h1>
+      <h2>Type to Destroy</h2>
+      <div class="menu-buttons">
+        <button id="start-btn" class="btn-primary">START GAME</button>
+        <button id="leaderboard-btn" class="btn-secondary">LEADERBOARD</button>
+      </div>
+      <div class="audio-toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="music-toggle" checked>
+          <span>Music</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="sfx-toggle" checked>
+          <span>SFX</span>
+        </label>
+      </div>
+      <div class="instructions">
+        <h3>HOW TO PLAY</h3>
+        <p>Type the words on asteroids to destroy them!</p>
+        <p>Protect Earth from destruction!</p>
+        <p>Build combos for higher scores!</p>
+      </div>
+    </div>
+    
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen hidden">
+      <h1>GAME OVER</h1>
+      <div id="final-stats">
+        <div class="stat-item">
+          <span class="label">Final Score:</span>
+          <span id="final-score" class="value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">Wave Reached:</span>
+          <span id="final-wave" class="value">1</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">Asteroids Destroyed:</span>
+          <span id="final-asteroids" class="value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">Accuracy:</span>
+          <span id="final-accuracy" class="value">0%</span>
+        </div>
+      </div>
+      
+      <div id="name-entry">
+        <input 
+          type="text" 
+          id="player-name-input" 
+          placeholder="Enter your name" 
+          maxlength="50">
+        <button id="submit-score-btn" class="btn-primary">SUBMIT SCORE</button>
+      </div>
+      
+      <div style="display: flex; gap: 20px;">
+        <button id="restart-btn" class="btn-secondary">PLAY AGAIN</button>
+        <button id="menu-btn" class="btn-secondary">MAIN MENU</button>
+      </div>
+    </div>
+    
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="screen hidden">
+      <h1>PAUSED</h1>
+      <div class="menu-buttons">
+        <button id="continue-btn" class="btn-primary">CONTINUE</button>
+        <button id="pause-restart-btn" class="btn-secondary">RESTART</button>
+        <button id="pause-quit-btn" class="btn-secondary">QUIT TO MENU</button>
+      </div>
+      <div class="audio-toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="pause-music-toggle" checked>
+          <span>Music</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="pause-sfx-toggle" checked>
+          <span>SFX</span>
+        </label>
+      </div>
+      <p class="muted">Press ESC to toggle pause</p>
+    </div>
+    
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="screen hidden">
+      <h1>LEADERBOARD</h1>
+      <div id="leaderboard-list">
+        <!-- Populated dynamically -->
+      </div>
+      <button id="back-btn" class="btn-secondary">BACK</button>
+    </div>
+    
+  </div>
+  
+  <!-- Load A-Frame Components --> 
+
+  
+  <!-- Load A-Frame Systems -->
+  
+  <!-- Main Entry Point -->
+  
+</body>
+</html>

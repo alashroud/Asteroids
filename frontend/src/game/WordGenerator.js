@@ -1,4 +1,4 @@
-import { words } from '/assets/data/words.js';
+import { words } from '../data/words.js';
 
 const DIFFICULTIES = ['easy', 'moderate', 'hard'];
 const DIFFICULTY_THRESHOLDS = {

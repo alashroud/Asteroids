@@ -1,4 +1,5 @@
 import gameEngine from './src/game/GameEngine.js';
+import SoundManager from './src/game/SoundManager.js';
 import UIManager from './src/ui/UIManager.js';
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -10,11 +11,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Initialize game engine
   gameEngine.init(scene);
+  SoundManager.init(scene);
   // Tell legacy GameStateSystem that TypingEngine path is active to avoid duplicate keyboard handling
   window.__USE_TYPING_ENGINE__ = true;
 
   // Initialize UI manager
-  UIManager.init(gameEngine, scene);
+  UIManager.init(gameEngine, scene, SoundManager);
+  SoundManager.playMenuMusic();
 
   // Activate starfield component on the dedicated entity
   const starfieldEl = document.getElementById('starfield');

@@ -8,11 +8,13 @@ class UIManager {
   constructor() {
     this.gameEngine = null;
     this.lastGameStats = null;
+    this.soundManager = null;
   }
 
-  init(gameEngine, sceneEl) {
+  init(gameEngine, sceneEl, soundManager) {
     this.gameEngine = gameEngine;
     this.scene = sceneEl;
+    this.soundManager = soundManager;
 
     // Query elements
     this.startBtn = document.getElementById('start-btn');
@@ -42,8 +44,13 @@ class UIManager {
     this.continueBtn = document.getElementById('continue-btn');
     this.pauseRestartBtn = document.getElementById('pause-restart-btn');
     this.pauseQuitBtn = document.getElementById('pause-quit-btn');
+    this.musicToggle = document.getElementById('music-toggle');
+    this.sfxToggle = document.getElementById('sfx-toggle');
+    this.pauseMusicToggle = document.getElementById('pause-music-toggle');
+    this.pauseSfxToggle = document.getElementById('pause-sfx-toggle');
 
     this.bindEvents();
+    this.syncAudioToggles();
 
     // Subscribe to score updates
     ScoreManager.onUpdate((state) => {
@@ -84,6 +91,7 @@ class UIManager {
     if (this.startBtn) this.startBtn.addEventListener('click', (e) => {
       this.hideAllScreens();
       this.showScorePanel();
+      this.soundManager?.stopMenuMusic();
       this.gameEngine.startGame();
     });
 
@@ -164,9 +172,24 @@ class UIManager {
       this.hideAllScreens();
       this.showMenu();
     });
+
+    const setMusic = (enabled) => {
+      this.soundManager?.setMusicEnabled(enabled);
+      this.syncAudioToggles();
+    };
+    const setSfx = (enabled) => {
+      this.soundManager?.setSfxEnabled(enabled);
+      this.syncAudioToggles();
+    };
+
+    this.musicToggle?.addEventListener('change', (e) => setMusic(e.target.checked));
+    this.pauseMusicToggle?.addEventListener('change', (e) => setMusic(e.target.checked));
+    this.sfxToggle?.addEventListener('change', (e) => setSfx(e.target.checked));
+    this.pauseSfxToggle?.addEventListener('change', (e) => setSfx(e.target.checked));
   }
 
   onGameStart() {
+    this.soundManager?.stopMenuMusic();
     this.hideAllScreens();
     this.showScorePanel();
   }
@@ -238,6 +261,8 @@ class UIManager {
     this.hideAllScreens();
     this.menuScreen?.classList?.remove('hidden');
     this.scorePanel?.classList?.add('hidden');
+    this.syncAudioToggles();
+    this.soundManager?.playMenuMusic();
   }
 
   async showLeaderboard(highlightScore) {
@@ -272,11 +297,18 @@ class UIManager {
   }
   
   showPause() {
+    this.syncAudioToggles();
     this.pauseScreen?.classList?.remove('hidden');
   }
   
   hidePause() {
     this.pauseScreen?.classList?.add('hidden');
+  }
+
+  syncAudioToggles() {
+    const settings = (this.soundManager?.getSettings?.()) || { musicEnabled: true, sfxEnabled: true };
+    [this.musicToggle, this.pauseMusicToggle].forEach(el => { if (el) el.checked = settings.musicEnabled; });
+    [this.sfxToggle, this.pauseSfxToggle].forEach(el => { if (el) el.checked = settings.sfxEnabled; });
   }
 }
 
