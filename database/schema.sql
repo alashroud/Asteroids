@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS scores (
     score INTEGER NOT NULL DEFAULT 0,
     words_typed INTEGER NOT NULL DEFAULT 0,
     accuracy DECIMAL(5,2) DEFAULT 0.00,
-    game_duration INTEGER DEFAULT 0, -- in seconds
+    game_duration (10,2) DEFAULT 0, -- in seconds
     difficulty VARCHAR(20) DEFAULT 'normal',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
