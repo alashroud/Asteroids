@@ -142,7 +142,7 @@ MIT
 
 
 ## Team Roles
-- **Arrubio** – Backend & Core Logic
+ **Arrubio** – Backend & Core Logic
 
 - Supabase integration
 - API endpoints
@@ -150,3 +150,16 @@ MIT
 - Project integration
 - Code review
 - Project management
+
+  **Jagape** – 3D & A-Frame Scene
+
+- Build and configure A‑Frame scene (Earth, spaceship, asteroids).
+- Asset management and scene composition (lighting, camera, materials).
+- Game loop logic: spawn rates, difficulty scaling, scoring triggers
+
+  **Mapilit** - UI/UX
+
+  - Build screens: Main Menu, Pause, Game Over, Leaderboard.
+  - Navigation/state management and input handling.
+  - Integrate with backend APIs (sessions, scores, leaderboard).
+  - Provide consistent UX, error handling, and loading states.
