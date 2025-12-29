@@ -18,12 +18,6 @@ export class TypingEngine {
       };
     }
   
-    /**
-     * Register a new target word (e.g., an asteroid).
-     * @param {string} id - Unique identifier for the target (e.g., entity ID).
-     * @param {string} word - The word to type.
-     * @param {any} [userData] - Optional extra data (e.g., reference to A-Frame entity).
-     */
     addTarget(id, word, userData = null) {
       if (!word) return;
       this.targets.set(id, {
@@ -33,10 +27,6 @@ export class TypingEngine {
       });
     }
   
-    /**
-     * Remove a target (e.g., destroyed or out of bounds).
-     * @param {string} id 
-     */
     removeTarget(id) {
       if (this.currentTargetId === id) {
         this.resetState();
@@ -44,10 +34,6 @@ export class TypingEngine {
       this.targets.delete(id);
     }
   
-    /**
-     * Process a keystroke from the user.
-     * @param {string} key 
-     */
     processKey(key) {
       if (!key || key.length !== 1) return;
       const char = key.toLowerCase();
@@ -107,9 +93,7 @@ export class TypingEngine {
       }
     }
   
-    /**
-     * Reset the typing state (e.g., if player presses Esc or target is lost).
-     */
+
     resetState() {
       this.currentTargetId = null;
       this.currentIndex = 0;
@@ -117,11 +101,6 @@ export class TypingEngine {
       this._emit('onReset');
     }
   
-    /**
-     * Subscribe to events.
-     * @param {'onLock'|'onProgress'|'onMistake'|'onComplete'|'onReset'} event 
-     * @param {Function} callback 
-     */
     on(event, callback) {
       if (this.listeners[event]) {
         this.listeners[event].push(callback);

@@ -13,7 +13,6 @@ export class ObjectPool {
         el.setAttribute('visible', false); // Hide initially
         
         // Initialize with dummy data to ensure component is attached and ready
-        // We set 'speed: 0' so they don't move while hidden
         el.setAttribute('asteroid-component', 'word: INIT; speed: 0; useModel: true'); 
         
         // Move out of view
@@ -24,17 +23,11 @@ export class ObjectPool {
       }
     }
   
-    /**
-     * Get an asteroid from the pool and activate it.
-     * @param {string} word - The word to type.
-     * @param {number} speed - Movement speed.
-     * @returns {HTMLElement|null} The activated entity or null if pool is empty.
-     */
+
     getAsteroid(word, speed) {
       if (this.pool.length === 0) {
         console.warn("ObjectPool empty! Consider increasing pool size.");
         // Optional: Expand pool dynamically if needed
-        // return this.createExtraAsteroid(); 
         return null; 
       }
   
@@ -45,7 +38,6 @@ export class ObjectPool {
       el.setAttribute('visible', true);
       
       // Update Component Data
-      // Note: A-Frame components update when setAttribute is called
       el.setAttribute('asteroid-component', {
         word: word,
         speed: speed,
@@ -56,10 +48,6 @@ export class ObjectPool {
       return el;
     }
   
-    /**
-     * Return an asteroid to the pool (deactivate it).
-     * @param {HTMLElement} el - The entity to return.
-     */
     returnAsteroid(el) {
       // Remove from active list
       const index = this.active.indexOf(el);

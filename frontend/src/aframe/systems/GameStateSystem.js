@@ -1,20 +1,7 @@
-/**
- * GameStateSystem.js - Handles typing input and game state management
- * 
- * This A-Frame system manages:
- * - User keyboard input for typing asteroid words
- * - Matching typed input with asteroids on screen
- * - Game state (active, paused, game over)
- * - Coordination between typing display, asteroids, and projectile firing
- * 
- * @system game-state
- */
+
 AFRAME.registerSystem('game-state', {
   
-  /**
-   * Initialize the game state system
-   * Sets up keyboard listeners and game event listeners
-   */
+
   init: function() {
     this.currentInput = '';        // Currently typed characters
     this.targetAsteroid = null;    // The asteroid being targeted
@@ -24,10 +11,6 @@ AFRAME.registerSystem('game-state', {
     this.setupGameListeners();
   },
 
-  /**
-   * Set up event listeners for game state changes
-   * Listens for: game-start, game-over, game-paused, game-resumed
-   */
   setupGameListeners: function() {
     // Start game - enable input
     this.el.addEventListener('game-start', () => {
@@ -52,11 +35,7 @@ AFRAME.registerSystem('game-state', {
     });
   },
 
-  /**
-   * Set up keyboard event listeners for typing mechanics
-   * Handles: letter keys, backspace, enter, escape
-   * Only processes input when game is active
-   */
+
   setupKeyboardListeners: function() {
     // If the TypingEngine path is active, avoid double-handling keyboard input
     if (window.__USE_TYPING_ENGINE__ === true) {
@@ -102,13 +81,7 @@ AFRAME.registerSystem('game-state', {
     });
   },
 
-  /**
-   * Handle a typed character
-   * Adds character to input, finds matching asteroid, highlights it
-   * If word is complete, triggers projectile firing
-   * 
-   * @param {string} char - The lowercase character that was typed
-   */
+
   handleCharacter: function(char) {
     this.currentInput += char;
     
@@ -144,11 +117,7 @@ AFRAME.registerSystem('game-state', {
     }
   },
 
-  /**
-   * Handle backspace key press
-   * Removes last character from input
-   * Re-matches asteroids or clears if no matches
-   */
+
   handleBackspace: function() {
     if (this.currentInput.length > 0) {
       this.currentInput = this.currentInput.slice(0, -1);
@@ -176,10 +145,6 @@ AFRAME.registerSystem('game-state', {
     }
   },
 
-  /**
-   * Handle Enter key press
-   * Submits current input if word is complete and matches target
-   */
   handleEnter: function() {
     if (this.targetAsteroid && this.currentInput) {
       const targetWord = this.targetAsteroid.components['asteroid-component']?.data.word;
@@ -192,12 +157,7 @@ AFRAME.registerSystem('game-state', {
     }
   },
 
-  /**
-   * Find an asteroid whose word starts with the current input
-   * Returns the first matching asteroid found
-   * 
-   * @returns {Element|null} The matching asteroid entity or null if none found
-   */
+
   findMatchingAsteroid: function() {
     if (!this.currentInput) return null;
 
@@ -215,12 +175,7 @@ AFRAME.registerSystem('game-state', {
     return null;
   },
 
-  /**
-   * Handle completed word input
-   * Fires projectile at target asteroid
-   * Emits word-completed event for scoring/tracking
-   * Clears input for next word
-   */
+
   completeWord: function() {
     if (!this.targetAsteroid) return;
     
@@ -244,10 +199,7 @@ AFRAME.registerSystem('game-state', {
     this.clearInput();
   },
 
-  /**
-   * Update the typing display UI with current input and target word
-   * Communicates with the typing-display component
-   */
+
   updateTypingDisplay: function() {
     const typingDisplay = document.querySelector('[typing-display]');
     if (typingDisplay && typingDisplay.components['typing-display']) {
@@ -263,10 +215,7 @@ AFRAME.registerSystem('game-state', {
     }
   },
 
-  /**
-   * Clear the current input and unhighlight target asteroid
-   * Also clears the typing display UI
-   */
+
   clearInput: function() {
     this.currentInput = '';
     

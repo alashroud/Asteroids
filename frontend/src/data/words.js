@@ -1,9 +1,3 @@
-/**
- * Words dataset categorized by difficulty.
- * Use with WordGenerator (expects { easy:[], moderate:[], hard:[] }).
- */
-
-/** @type {{ easy: string[]; moderate: string[]; hard: string[] }} */
 export const words = {
     easy: [
       'cat','dog','sun','map','book','tree','star','ball','fish','bird',
@@ -20,10 +14,6 @@ export const words = {
     ]
   };
   
-  /**
-   * Validate dataset shape and contents.
-   * Throws if invalid to catch mistakes during dev.
-   */
   export function validateWords(dataset = words) {
     const levels = ['easy', 'moderate', 'hard'];
     for (const lvl of levels) {
@@ -39,10 +29,7 @@ export const words = {
     return true;
   }
   
-  /**
-   * Merge user-provided lists into the base dataset.
-   * Returns a new dataset; does not mutate original.
-   */
+
   export function mergeWords(extra = {}) {
     const out = {
       easy: [...words.easy],
@@ -58,9 +45,7 @@ export const words = {
     return out;
   }
   
-  /**
-   * Utility to normalize to lowercase and unique entries per difficulty.
-   */
+
   export function normalizeWords(dataset = words) {
     const uniq = arr => Array.from(new Set(arr.map(w => w.toLowerCase().trim()).filter(Boolean)));
     const normalized = {

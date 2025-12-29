@@ -1,8 +1,3 @@
-/**
- * GameStates.js
- * Helper utilities for showing ephemeral or persistent game state messages
- */
-
 const DEFAULT_DURATION = 3000;
 
 const GameStates = {
@@ -34,11 +29,6 @@ const GameStates = {
     return this._messageEl;
   },
 
-  /**
-   * Show a temporary message centered on screen
-   * @param {string} text
-   * @param {number} duration - ms
-   */
   showTemporary(text, duration = DEFAULT_DURATION) {
     const el = this._ensureElement();
     if (!el) return;
@@ -51,9 +41,6 @@ const GameStates = {
     this._hideTimer = setTimeout(() => this.hide(), duration);
   },
 
-  /**
-   * Show a persistent message until hide() is called
-   */
   showPersistent(text) {
     const el = this._ensureElement();
     if (!el) return;

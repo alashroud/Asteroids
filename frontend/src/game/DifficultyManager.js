@@ -18,11 +18,7 @@ export class DifficultyManager {
     };
   }
 
-  /**
-   * Called whenever a player successfully types a word.
-   * Updates internal counters and checks for level up.
-   * @returns {boolean} True if the player leveled up.
-   */
+
   onWordTyped() {
     this.wordsTyped++;
     
@@ -35,10 +31,7 @@ export class DifficultyManager {
     return false;
   }
 
-  /**
-   * Get the current spawn interval in milliseconds.
-   * Decreases as level increases (enemies spawn faster).
-   */
+
   getSpawnInterval() {
     const reduction = (this.level - 1) * this.config.intervalDecrement;
     const interval = this.config.baseSpawnInterval - reduction;
@@ -46,27 +39,18 @@ export class DifficultyManager {
     return Math.max(interval, this.config.minSpawnInterval);
   }
 
-  /**
-   * Get the enemy movement speed for the current level.
-   * Increases as level increases.
-   */
   getEnemySpeed() {
     return this.config.baseEnemySpeed + ((this.level - 1) * this.config.speedIncrement);
   }
 
-  /**
-   * Get the word difficulty category for the current level.
-   * @returns {'easy'|'moderate'|'hard'}
-   */
+
   getWordDifficulty() {
     if (this.level < 5) return 'easy';
     if (this.level < 10) return 'moderate';
     return 'hard';
   }
 
-  /**
-   * Get current level info for UI.
-   */
+
   getStatus() {
     return {
       level: this.level,

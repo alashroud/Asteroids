@@ -1,7 +1,3 @@
-/**
- * ConfettiComponent.js
- * Spawns lightweight confetti particles when 'game-over' is emitted
- */
 AFRAME.registerComponent('confetti', {
   schema: {
     count: { type: 'int', default: 40 },

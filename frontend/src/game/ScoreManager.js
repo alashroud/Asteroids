@@ -1,9 +1,7 @@
 export class ScoreManager {
   constructor() {
-    // ✅ Initialize FIRST
     this.listeners = [];
 
-    // Then initialize state
     this.reset();
   }
 

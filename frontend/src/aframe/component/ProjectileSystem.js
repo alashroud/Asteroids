@@ -1,24 +1,7 @@
-/**
- * ProjectileSystem.js - Handles laser projectile firing and collision detection
- * 
- * This A-Frame component manages:
- * - Firing laser projectiles from ship toward target asteroids
- * - Projectile movement and orientation
- * - Collision detection between projectiles and asteroids
- * - Projectile lifecycle (creation, movement, destruction)
- * - Visual trail effect for projectiles
- * 
- * Projectiles are spawned when user completes typing an asteroid word
- * and automatically travel toward the target until collision or timeout.
- * 
- * @component projectile-system
- */
+
 AFRAME.registerComponent('projectile-system', {
   
-  /**
-   * Initialize the projectile system
-   * Creates array to track all active projectiles
-   */
+
   init: function() {
     this.projectiles = []; // Array of active projectile objects
     if (this.el && this.el.sceneEl) {
@@ -34,13 +17,7 @@ AFRAME.registerComponent('projectile-system', {
     }
   },
 
-  /**
-   * Fire a laser projectile at a target asteroid
-   * Creates a green laser with glowing trail effect
-   * Projectile automatically travels toward target and checks for collision
-   * 
-   * @param {Element} targetAsteroid - The asteroid entity to fire at
-   */
+
   fireAtTarget: function(targetAsteroid) {
     const ship = this.el;
     const shipPos = ship.object3D.position.clone();
@@ -107,19 +84,7 @@ AFRAME.registerComponent('projectile-system', {
     console.log('Projectile fired with trail!');
   },
 
-  /**
-   * Update all active projectiles (called every frame)
-   * Handles:
-   * - Projectile movement along direction vector
-   * - Collision detection with target asteroids
-   * - Removal of projectiles that hit targets
-   * - Removal of projectiles that exceed max lifetime (missed shots)
-   * 
-   * Iterates backwards to safely remove elements during iteration
-   * 
-   * @param {number} time - Total elapsed time in milliseconds
-   * @param {number} deltaTime - Time since last frame in milliseconds
-   */
+
   tick: function(time, deltaTime) {
     if (window.__GAME_PAUSED__ === true) return;
     const dt = deltaTime / 1000; // Convert to seconds
@@ -160,9 +125,7 @@ AFRAME.registerComponent('projectile-system', {
     }
   }
   ,
-  /**
-   * Clear all active projectiles from the scene
-   */
+
   clearAll: function() {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];

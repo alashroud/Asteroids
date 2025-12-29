@@ -1,4 +1,3 @@
-/* global AFRAME */
 import TypingEngine from '../../game/TypingEngine.js';
 import GameEngine from '../../game/GameEngine.js';
 
@@ -14,7 +13,6 @@ AFRAME.registerComponent('asteroid-component', {
 
   init: function() {
     // --- 1. Create a Child Entity for the Visual Model ---
-    // We do this so we can spin the rock independently of the text
     this.modelEl = document.createElement('a-entity');
     
     if (this.data.useModel) {
@@ -33,10 +31,10 @@ AFRAME.registerComponent('asteroid-component', {
     this.textEl.setAttribute('value', this.data.word);
     this.textEl.setAttribute('align', 'center');
     
-    // Position text ABOVE the asteroid so it's not inside
+    
     this.textEl.setAttribute('position', '0 10 0'); 
     
-    // Make it large enough to read
+    
     this.textEl.setAttribute('width', '10'); 
     
     // Ensure it renders on both sides just in case
@@ -171,7 +169,7 @@ AFRAME.registerComponent('asteroid-component', {
           this.textEl.object3D.scale.set(textScale, textScale, textScale);
         }
 
-        // 2. Model Scaling (tuned: readable but not oversized)
+        // 2. Model Scaling 
         if (this.modelEl) {
           const baseScale = 0.45;
           const farScale = 0.9;
@@ -206,12 +204,7 @@ AFRAME.registerComponent('asteroid-component', {
       // Scale explosion appropriately (was 0.35, made slightly larger for visibility)
       explosion.setAttribute('scale', '0.2 0.2 0.2');
       
-      // Use the correct animation name found in GLTF: 'Meteor_Explode' (confirmed in previous usage, but re-verifying)
-      // Based on common practices and the user's previous code, 'Meteor_Explode' seems to be the intended clip.
-      // However, to be safe and ensure it plays WHATEVER animation is there (since we saw many accessors but no explicit animation names in the raw read),
-      // we can try a more robust approach or stick to the known working one if verified.
-      // Given the user specifically asked to "examine" and "use that for the break animation", 
-      // and the previous code used 'Meteor_Explode', we will stick with that but ensure it's set up to unload.
+      
       explosion.setAttribute('animation-mixer', 'clip: *; loop: once; clampWhenFinished: true');
       
       scene.appendChild(explosion);
@@ -246,7 +239,6 @@ AFRAME.registerComponent('asteroid-component', {
       explosion.addEventListener('animation-finished', cleanup);
       
       // Fallback cleanup in case animation event misses or is too long
-      // Reduced from 2500ms to 1000ms for quicker memory release as requested ("unload to release some memory")
       setTimeout(cleanup, 200);
     }
 
@@ -279,10 +271,6 @@ AFRAME.registerComponent('asteroid-component', {
     }
   },
 
-  /**
-   * Dispose Three.js resources to free memory
-   * Called when asteroid is destroyed or removed
-   */
   _disposeResources: function() {
     if (this.destroyed) return; // Prevent double disposal
     

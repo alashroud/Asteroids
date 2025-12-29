@@ -1,14 +1,4 @@
-/**
- * LeaderboardUI.js
- * Small helper to render leaderboard entries into a container element
- */
-
 const LeaderboardUI = {
-  /**
-   * Render a leaderboard list into container
-   * @param {HTMLElement} container - Element where the list will be placed
-   * @param {Array} entries - Array of { player_name, score }
-   */
   renderLeaderboard(container, entries = []) {
     if (!container) return;
 

@@ -1,48 +1,10 @@
-/**
- * EarthComponents.js - Earth planet with 3D model, health system, and shield protection
- * 
- * This file contains three A-Frame components:
- * 1. earth - The Earth planet with health system and damage effects
- * 2. shield - Protective shield around Earth that absorbs damage
- * 3. health-bar-billboard - UI component that keeps health bars facing camera
- * 
- * Features:
- * - 3D GLTF model loading with fallback sphere
- * - Earth rotation and cloud animations
- * - Health system with visual damage feedback
- * - Shield protection layer with destruction effects
- * - Billboard health bars that always face the camera
- * 
- * @component earth, shield, health-bar-billboard
- */
-
-// ===========================================
-// EARTH COMPONENT
-// ===========================================
-
-/**
- * Earth Component - Main planet with health and animation system
- * 
- * Manages:
- * - GLTF model loading with fallback
- * - Health system and damage tracking
- * - Visual damage feedback (red flash)
- * - Health bar display and updates
- * - Earth rotation animation
- * - Game over condition when health reaches zero
- * 
- * @component earth
- */
 AFRAME.registerComponent('earth', {
   schema: {
     radius: { type: 'number', default: 2 },
     health: { type: 'number', default: 100 }
   },
 
-  /**
-   * Initialize Earth component
-   * Sets up model loading, health tracking, and health bar UI
-   */
+  
   init: function() {
     this.maxHealth = this.data.health;
     this.mixer = null;                // Animation mixer for GLTF animations
@@ -63,10 +25,6 @@ AFRAME.registerComponent('earth', {
     }, 3000);
   },
 
-  /**
-   * Load Earth 3D model from GLTF file
-   * Sets up event listeners for successful load or error
-   */
   loadModel: function() {
     const modelEl = document.createElement('a-entity');
     modelEl.setAttribute('gltf-model', '/assets/earth/scene.gltf');
@@ -90,10 +48,7 @@ AFRAME.registerComponent('earth', {
     this.modelEl = modelEl;
   },
 
-  /**
-   * Create simple blue sphere as fallback if model fails
-   * Used when GLTF model cannot be loaded
-   */
+
   createFallbackSphere: function() {
     if (this.modelEl && this.modelEl.parentNode) {
       this.modelEl.parentNode.removeChild(this.modelEl);
@@ -117,12 +72,7 @@ AFRAME.registerComponent('earth', {
     console.log('Using fallback sphere for Earth');
   },
 
-  /**
-   * Handle successful model load
-   * Sets up animation mixer for Earth rotation and cloud animations
-   * 
-   * @param {Event} e - The model-loaded event
-   */
+
   onModelLoaded: function(e) {
     this.modelLoaded = true;
     const model = this.modelEl.components['gltf-model'].model;
@@ -158,11 +108,7 @@ AFRAME.registerComponent('earth', {
     }
   },
 
-  /**
-   * Create health bar UI elements
-   * Creates background, health bar, and text elements
-   * Health bar is initially hidden and shown when shield is destroyed
-   */
+
   setupHealthBar: function() {
     const scene = this.el.sceneEl;
     
@@ -220,10 +166,7 @@ AFRAME.registerComponent('earth', {
     this.wordOffset = this.data.size + 1.5;
   },
 
-  /**
-   * Show Earth health bar
-   * Called when shield is destroyed to display Earth's health
-   */
+
   showHealthBar: function() {
     console.log('Showing Earth health bar');
     if (this.healthBarBg) this.healthBarBg.setAttribute('visible', 'true');
@@ -232,13 +175,6 @@ AFRAME.registerComponent('earth', {
     this.updateHealthBar();
   },
 
-  /**
-   * Update loop (called every frame)
-   * Updates animation mixer and rotation
-   * 
-   * @param {number} time - Total elapsed time in milliseconds
-   * @param {number} deltaTime - Time since last frame in milliseconds
-   */
   tick: function(time, deltaTime) {
     if (window.__GAME_PAUSED__ === true) return;
     const dt = deltaTime / 1000;
@@ -254,12 +190,7 @@ AFRAME.registerComponent('earth', {
     }
   },
 
-  /**
-   * Apply damage to Earth
-   * Reduces health, updates UI, flashes red, checks for game over
-   * 
-   * @param {number} damage - Amount of damage to apply
-   */
+ 
   takeDamage: function(damage) {
     this.data.health = Math.max(0, this.data.health - damage);
     this.updateHealthBar();
@@ -281,10 +212,7 @@ AFRAME.registerComponent('earth', {
     }
   },
 
-  /**
-   * Flash Earth red to indicate damage
-   * Temporarily changes emissive color to red for visual feedback
-   */
+
   flashDamage: function() {
     if (this.modelEl && this.modelLoaded) {
       const model = this.modelEl.getObject3D('mesh');
@@ -320,11 +248,7 @@ AFRAME.registerComponent('earth', {
     }
   },
 
-  /**
-   * Update health bar visual appearance
-   * Changes color based on health percentage and updates text
-   * Health bar scales and shifts position to show depletion
-   */
+
   updateHealthBar: function() {
     if (!this.healthBar || !this.healthText) return;
     
@@ -363,12 +287,7 @@ AFRAME.registerComponent('earth', {
     this.healthText.setAttribute('text', 'color', color);
   },
 
-  /**
-   * Heal Earth by specified amount
-   * Cannot exceed maximum health
-   * 
-   * @param {number} amount - Amount of health to restore
-   */
+
   heal: function(amount) {
     this.data.health = Math.min(this.maxHealth, this.data.health + amount);
     this.updateHealthBar();
@@ -377,25 +296,7 @@ AFRAME.registerComponent('earth', {
 });
 
 
-// ===========================================
-// SHIELD COMPONENT
-// ===========================================
 
-/**
- * Shield Component - Protective barrier around Earth
- * 
- * Manages:
- * - Shield mesh with wireframe and glow effects
- * - Health system separate from Earth
- * - Visual effects (pulsing, hit flashes, color changes)
- * - Destruction sequence with explosion effects
- * - Shield health bar display
- * 
- * Shield absorbs damage before Earth takes hits
- * When destroyed, Earth's health bar becomes visible
- * 
- * @component shield
- */
 AFRAME.registerComponent('shield', {
   schema: {
     radius: { type: 'number', default: 3.5 },
@@ -417,10 +318,6 @@ AFRAME.registerComponent('shield', {
     console.log('Shield initialized successfully');
   },
 
-  /**
-   * Create shield mesh with wireframe and glow
-   * Uses icosahedron geometry for geodesic appearance
-   */
   createShieldMesh: function() {
     // Main wireframe shield
     const geometry = new THREE.IcosahedronGeometry(this.data.radius, 2);
@@ -451,10 +348,7 @@ AFRAME.registerComponent('shield', {
     console.log('Shield mesh created and visible');
   },
 
-  /**
-   * Create shield health bar UI elements
-   * Similar to Earth health bar but uses cyan colors
-   */
+ 
   createHealthBar: function() {
     const scene = this.el.sceneEl;
     
@@ -509,13 +403,7 @@ AFRAME.registerComponent('shield', {
     console.log('Shield health bar created');
   },
 
-  /**
-   * Update loop (called every frame)
-   * Handles pulsing animation, rotation, and hit flash fade
-   * 
-   * @param {number} time - Total elapsed time in milliseconds
-   * @param {number} deltaTime - Time since last frame in milliseconds
-   */
+
   tick: function(time, deltaTime) {
     const dt = deltaTime / 1000;
     
@@ -544,10 +432,7 @@ AFRAME.registerComponent('shield', {
     }
   },
 
-  /**
-   * Trigger pulse effect when hit
-   * Briefly increases opacity and flashes yellow
-   */
+
   pulse: function() {
     this.hitFlash = true;
     const mesh = this.el.getObject3D('mesh');
@@ -564,14 +449,7 @@ AFRAME.registerComponent('shield', {
     }
   },
 
-  /**
-   * Apply damage to shield
-   * Reduces strength, triggers visual effects, updates health bar
-   * Destroys shield if strength reaches zero
-   * 
-   * @param {number} damage - Amount of damage to apply
-   * @returns {boolean} True if shield was destroyed, false otherwise
-   */
+
   takeDamage: function(damage) {
     if (this.destroyed) {
       return true;
@@ -613,10 +491,7 @@ AFRAME.registerComponent('shield', {
     return false;
   },
 
-  /**
-   * Update shield health bar visual appearance
-   * Similar to Earth health bar but with cyan/orange/red colors
-   */
+
   updateHealthBar: function() {
     if (!this.healthBar || !this.healthText) return;
     
@@ -642,12 +517,7 @@ AFRAME.registerComponent('shield', {
     this.healthText.setAttribute('text', 'color', color);
   },
 
-  /**
-   * Destroy shield with explosion effects
-   * Creates flash, shockwave ring, and particle explosion
-   * Shows Earth health bar after shield destruction
-   * Emits shield-destroyed event for game logic
-   */
+
   destroy: function() {
     if (this.destroyed) return;
     this.destroyed = true;
@@ -688,15 +558,7 @@ AFRAME.registerComponent('shield', {
     }, 400);
   },
 
-  /**
-   * Create explosion effects when shield is destroyed
-   * Generates:
-   * - Bright flash sphere that fades and expands
-   * - Shockwave ring that expands outward
-   * - 50 particle fragments flying in all directions
-   * 
-   * All effects are temporary and self-cleaning
-   */
+
   createExplosion: function() {
     const group = document.createElement('a-entity');
     group.setAttribute('position', '0 0 0');
@@ -747,31 +609,14 @@ AFRAME.registerComponent('shield', {
 });
 
 
-// ===========================================
-// HEALTH BAR BILLBOARD COMPONENT
-// ===========================================
 
-/**
- * Health Bar Billboard Component - Keeps health bars facing camera
- * 
- * Ensures health bars:
- * - Always position above their target (Earth or Shield)
- * - Always face the camera for readability
- * - Stay centered at origin on X and Z axes
- * - Update every frame for smooth tracking
- * 
- * @component health-bar-billboard
- */
 AFRAME.registerComponent('health-bar-billboard', {
   schema: {
     target: { type: 'selector', default: null },  // Target entity to follow
     offsetY: { type: 'number', default: 2.5 }     // Height offset above target
   },
 
-  /**
-   * Initialize billboard component
-   * Gets reference to target entity
-   */
+
   init: function() {
     this.camera = null;
     this.target = null;
@@ -782,10 +627,7 @@ AFRAME.registerComponent('health-bar-billboard', {
     }
   },
 
-  /**
-   * Update loop (called every frame)
-   * Positions health bar above target and rotates to face camera
-   */
+
   tick: function() {
     // Get camera reference on first frame
     if (!this.camera) {

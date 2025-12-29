@@ -1,4 +1,3 @@
-/* StarfieldComponent.js - lightweight starfield background for A-Frame scene */
 AFRAME.registerComponent('starfield', {
   schema: {
     count: { type: 'int', default: 600 },

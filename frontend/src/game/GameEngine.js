@@ -21,10 +21,7 @@ export class GameEngine {
     this._setupTypingEvents();
   }
 
-  /**
-   * Called once when the scene loads.
-   * @param {HTMLElement} sceneEl 
-   */
+
   init(sceneEl) {
     this.scene = sceneEl;
     console.log('GameEngine initialized');
@@ -59,9 +56,7 @@ export class GameEngine {
     });
   }
 
-  /**
-   * Pause the game loop and show pause UI
-   */
+
   pauseGame() {
     if (this.state !== 'PLAYING') return;
     this.state = 'PAUSED';
@@ -69,9 +64,7 @@ export class GameEngine {
     this.scene && this.scene.emit('game-paused');
   }
 
-  /**
-   * Resume the game loop from paused state
-   */
+
   resumeGame() {
     if (this.state !== 'PAUSED') return;
     this.state = 'PLAYING';
@@ -80,10 +73,7 @@ export class GameEngine {
     requestAnimationFrame(this.gameLoop);
   }
 
-  /**
-   * Starts the game session.
-   * @param {string} playerName - Name entered by the user
-   */
+
   startGame(playerName) {
     if (this.state === 'PLAYING') return;
 
@@ -155,9 +145,7 @@ export class GameEngine {
     this.scene.emit('game-start');
   }
 
-  /**
-   * Stops the game, shows Game Over screen, and saves score.
-   */
+
   async stopGame() {
     if (this.state === 'GAMEOVER') return;
 
@@ -204,10 +192,7 @@ export class GameEngine {
     }
   }
 
-  /**
-   * Cleans up all game entities without showing game over screen.
-   * Used when returning to main menu to properly reset state.
-   */
+
   cleanupGame() {
     this.state = 'MENU';
     window.__GAME_PAUSED__ = false;
@@ -283,10 +268,7 @@ export class GameEngine {
     console.log('Game cleaned up for menu return');
   }
 
-  /**
-   * Resets the game state and immediately starts a new game.
-   * Used for "Play Again" functionality - no menu shown.
-   */
+
   resetGame() {
     console.log('Resetting game for play again...');
     
@@ -294,7 +276,6 @@ export class GameEngine {
     this.cleanupGame();
     
     // Force UI to refresh by triggering a score update with reset values
-    // This ensures the UI properly displays 0 score, wave 1, x1 combo
     const state = {
       score: 0,
       multiplier: 1
@@ -325,7 +306,6 @@ export class GameEngine {
     if (this.state !== 'PLAYING') return;
     
     // Pass single characters to the Typing Engine
-    // Ignore special keys like 'Shift', 'Backspace' (unless you want to handle them)
     if (e.key === 'Backspace') {
       e.preventDefault();
       TypingEngine.backspace();

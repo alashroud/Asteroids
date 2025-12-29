@@ -1,25 +1,7 @@
-/**
- * CollisionSystem.js - Handles collision detection between asteroids, earth, and shield
- * 
- * This A-Frame system manages:
- * - Tracking all active asteroids in the scene
- * - Detecting collisions between asteroids and shield/earth
- * - Managing shield destruction state
- * - Applying damage to earth and shield on collision
- * - Emitting collision events for other systems
- * 
- * Collision Priority:
- * 1. Shield collision (if shield exists and not destroyed)
- * 2. Earth collision (if shield is bypassed or destroyed)
- * 
- * @system collision
- */
+
 AFRAME.registerSystem('collision', {
   
-  /**
-   * Initialize the collision system
-   * Sets up asteroid tracking array and collision check throttling
-   */
+
   init: function() {
     this.asteroids = [];           // Array of active asteroid entities
     this.earth = null;             // Reference to earth entity
@@ -31,13 +13,7 @@ AFRAME.registerSystem('collision', {
     this.setupListeners();
   },
 
-  /**
-   * Set up event listeners for asteroid and shield lifecycle events
-   * Listens for:
-   * - asteroid-spawned: Add new asteroids to tracking
-   * - asteroid-destroyed: Remove asteroids from tracking
-   * - shield-destroyed: Mark shield as destroyed
-   */
+
   setupListeners: function() {
     // Listen for asteroid spawns - add to tracking array
     this.el.addEventListener('asteroid-spawned', (e) => {
@@ -64,13 +40,7 @@ AFRAME.registerSystem('collision', {
     });
   },
 
-  /**
-   * Main collision detection loop (called every frame)
-   * Throttled to check every 16ms (~60fps) to prevent fast asteroids from passing through
-   * 
-   * @param {number} time - Total elapsed time in milliseconds
-   * @param {number} deltaTime - Time since last frame in milliseconds
-   */
+
   tick: function(time, deltaTime) {
     // Throttle collision checks to every 16ms to catch fast-moving asteroids
     if (time - this.lastCheck < this.checkInterval) return;
@@ -103,16 +73,7 @@ AFRAME.registerSystem('collision', {
     });
   },
 
-  /**
-   * Check if an asteroid is colliding with shield or earth
-   * Uses sphere-sphere collision detection based on distance
-   * 
-   * Collision order:
-   * 1. Check shield collision first (if shield exists)
-   * 2. Check earth collision (if no shield collision)
-   * 
-   * @param {Element} asteroid - The asteroid entity to check
-   */
+
   checkAsteroidCollisions: function(asteroid) {
     // Skip if asteroid is invalid or already destroyed
     if (!asteroid.components['asteroid-component'] || asteroid.components['asteroid-component'].destroyed) return;
@@ -144,13 +105,7 @@ AFRAME.registerSystem('collision', {
     }
   },
 
-  /**
-   * Handle collision between asteroid and shield
-   * Applies damage to shield, destroys asteroid
-   * If shield health reaches zero, marks shield as destroyed
-   * 
-   * @param {Element} asteroid - The asteroid that collided with shield
-   */
+
   handleShieldCollision: function(asteroid) {
     console.log('Shield collision!');
 
@@ -180,13 +135,7 @@ AFRAME.registerSystem('collision', {
     });
   },
 
-  /**
-   * Handle collision between asteroid and earth
-   * Applies damage to earth, destroys asteroid
-   * May trigger game over if earth health reaches zero
-   * 
-   * @param {Element} asteroid - The asteroid that collided with earth
-   */
+
   handleEarthCollision: function(asteroid) {
     console.log('EARTH COLLISION!');
 

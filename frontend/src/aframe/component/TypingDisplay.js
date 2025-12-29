@@ -1,27 +1,9 @@
-/**
- * TypingDisplay.js - HUD overlay for showing current typing input
- * 
- * This A-Frame component manages:
- * - Visual display of user's typed input at bottom of screen
- * - Target word display showing which asteroid is being typed
- * - Color feedback (green for correct, red for incorrect input)
- * - Visibility control based on game state
- * - Instruction text for player guidance
- * 
- * The HUD is positioned at the bottom center of the screen and overlays
- * the 3D scene without interfering with gameplay.
- * 
- * @component typing-display
- */
+
 import TypingEngine from '../../game/TypingEngine.js';
 
 AFRAME.registerComponent('typing-display', {
   schema: {},
 
-  /**
-   * Initialize the typing display component
-   * Creates the HUD elements and sets up event listeners
-   */
   init: function() {
     this.currentInput = '';  // Currently typed characters
     this.targetWord = '';    // The word being targeted (from asteroid)
@@ -30,16 +12,7 @@ AFRAME.registerComponent('typing-display', {
     this.setupKeyboardListeners();
   },
 
-  /**
-   * Create the HUD overlay elements and add to DOM
-   * Creates:
-   * - Main container (centered at bottom of screen)
-   * - Target word display (shows which asteroid is targeted)
-   * - Input text display (shows current typed characters)
-   * - Instruction text (gameplay hint)
-   * 
-   * Also sets up game state event listeners to show/hide HUD
-   */
+
   createHUD: function() {
     // Main HUD container
     const hudContainer = document.createElement('div');
@@ -182,11 +155,7 @@ AFRAME.registerComponent('typing-display', {
     });
   },
 
-  /**
-   * Set up keyboard event listeners
-   * Note: Actual keyboard handling is done by GameStateSystem
-   * This component only displays the results
-   */
+
   setupKeyboardListeners: function() {
     // Connect TypingEngine events to update the HUD
     TypingEngine.on('onLock', (targetId) => {
@@ -239,33 +208,20 @@ AFRAME.registerComponent('typing-display', {
     });
   },
 
-  /**
-   * Show the HUD overlay
-   * Called when game starts or resumes
-   */
   show: function() {
     if (this.hudContainer) {
       this.hudContainer.style.display = 'block';
     }
   },
 
-  /**
-   * Hide the HUD overlay
-   * Called when game pauses or ends
-   */
+
   hide: function() {
     if (this.hudContainer) {
       this.hudContainer.style.display = 'none';
     }
   },
 
-  /**
-   * Update the input display with current text and color
-   * Color changes based on correctness:
-   * - Green: Input matches target word so far
-   * - Red: Input does not match target word
-   * - Green (default): No target selected yet
-   */
+
   updateDisplay: function() {
     if (this.inputText) {
       // Blinking caret
@@ -284,12 +240,7 @@ AFRAME.registerComponent('typing-display', {
     }
   },
 
-  /**
-   * Set the target word to display
-   * Shows which asteroid word is currently being typed
-   * 
-   * @param {string} word - The asteroid word being targeted
-   */
+
   setTargetWord: function(word) {
     this.targetWord = word;
     if (this.targetDisplay) {
@@ -297,10 +248,7 @@ AFRAME.registerComponent('typing-display', {
     }
   },
 
-  /**
-   * Clear the input and target word displays
-   * Called when word is completed or input is cancelled
-   */
+
   clearInput: function() {
     this.currentInput = '';
     this.targetWord = '';
@@ -310,30 +258,20 @@ AFRAME.registerComponent('typing-display', {
     }
   },
 
-  /**
-   * Hide the instruction text
-   * Can be called after player has learned the controls
-   */
   hideInstructions: function() {
     if (this.instruction) {
       this.instruction.style.display = 'none';
     }
   },
 
-  /**
-   * Show the instruction text
-   * Can be called to remind player of controls
-   */
+
   showInstructions: function() {
     if (this.instruction) {
       this.instruction.style.display = 'block';
     }
   },
 
-  /**
-   * Clean up and remove HUD from DOM
-   * Called when component is removed
-   */
+
   remove: function() {
     if (this.hudContainer && this.hudContainer.parentNode) {
       this.hudContainer.parentNode.removeChild(this.hudContainer);

@@ -1,4 +1,3 @@
-// ShipComponents.js - Spaceship with orbital movement
 AFRAME.registerComponent('spaceship', {
   schema: {
     speed: { type: 'number', default: 50}
