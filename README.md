@@ -1,6 +1,11 @@
-# Asteroids - Type Defender
+# Game Story & Concept
+Asteroids is a fast, arcade-style space shooter where a lone defense ship shields Earth from waves of incoming asteroids; thread through debris, intercept threats, and use precise shots to break rocks before they breach orbit—turning escalating danger into points and progress.
 
-A 3D typing space game to improve your typing skills, built with A-Frame and Three.js.
+# Gameplay Overview
+- Clear all asteroids to advance; each wave ramps speed, density, and spawn variety.
+- Collisions cost a life.
+- Score scales with fragment size, with bonuses for clean clears and streaks; high scores persist per difficulty.
+
 
 ## Project Structure
 
