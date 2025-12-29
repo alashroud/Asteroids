@@ -140,7 +140,8 @@ npm run build
 
 MIT
 
-### Team Roles
+
+## Team Roles
 - **Arrubio** – Backend & Core Logic
 
 - Supabase integration
