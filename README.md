@@ -139,3 +139,13 @@ npm run build
 ## License
 
 MIT
+
+### Team Roles
+- **Arrubio** – Backend & Core Logic
+
+- Supabase integration
+- API endpoints
+- Game logic structure
+- Project integration
+- Code review
+- Project management
